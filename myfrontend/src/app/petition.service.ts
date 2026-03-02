@@ -91,5 +91,12 @@ fetchCategories() {
       {},
     );
   }
-  
+
+ // petition.service.ts
+  getMySignatures() {
+    // Usamos 'mis-firmas' para el backend
+    return this.http.get<any>('http://localhost:8000/api/petitions/mis-firmas').pipe(
+      map(res => Array.isArray(res) ? res : res.data)
+    );
+  }
 }

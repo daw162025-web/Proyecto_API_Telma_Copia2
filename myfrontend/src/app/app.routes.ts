@@ -9,6 +9,7 @@ import { EditComponent } from './pages/edit-component/edit-component';
 import { ShowComponent } from './pages/show-component/show-component';
 import { HomeComponent } from './home/home-component/home-component';
 import { MyPetitionsComponent } from './pages/mypetitions-component/mypetitions-component';
+import { MySignaturesComponent } from './pages/my-signatures/my-signatures';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -21,6 +22,7 @@ export const routes: Routes = [
 
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'mypetitions', component: MyPetitionsComponent, canActivate: [authGuard] },
+  { path: 'petitions/mysignatures', component: MySignaturesComponent, canActivate: [authGuard] },
 
   // 5. Wildcard: Cualquier ruta desconocida redirige al login o home
   { path: '**', redirectTo: 'login' },

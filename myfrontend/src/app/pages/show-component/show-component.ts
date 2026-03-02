@@ -77,4 +77,29 @@ export class ShowComponent implements OnInit {
       });
     }
   }
+
+  sign(): void {
+    //Comprobamos que hay una petición cargada en la señal
+    const currentPetition = this.petition();
+    if (!currentPetition || !currentPetition.id) return;
+
+    //Llamamos al servicio
+    this.petitionService.sign(currentPetition.id).subscribe({
+      next: (response: any) => {
+        // Actualizamos la señal localmente para que suba el número en pantalla
+        this.petition.update((pet: any) => {
+          if (pet) {
+            pet.signeds = (pet.signeds || 0) + 1;
+          }
+          return { ...pet }; // Devolvemos un nuevo objeto para que Angular detecte el cambio
+        });
+        
+        alert('¡Gracias por firmar la petición!');
+      },
+      error: (err) => {
+        const errorMessage = err.error?.message || 'Ocurrió un error al intentar firmar.';
+        alert(errorMessage);
+      }
+    });
+  }
 }

@@ -17,23 +17,25 @@ Route::middleware('auth:api')->group(function () {
 
 // RUTAS PÚBLICAS DE PETICIONES
 Route::get('petitions', [PetitionController::class, 'index']); // Listar todas
-Route::get('petitions/{id}', [PetitionController::class, 'show']); // Ver detalle
-
 Route::get('categories', [CategoryController::class, 'index']);
 
 // RUTAS PROTEGIDAS DE PETICIONES (auth:api)
 Route::middleware('auth:api')->group(function () {
 
-    // Crear (POST)
+    Route::get('petitions/mis-firmas', [PetitionController::class, 'mySignatures']);
+
+    // 2. Crear (POST)
     Route::post('petitions', [PetitionController::class, 'store']);
 
-    // Actualizar (PUT) - Laravel detecta el _method: PUT que envía Angular
+    // 3. Actualizar (PUT)
     Route::put('petitions/{id}', [PetitionController::class, 'update']);
 
-    // Borrar (DELETE)
+    // 4. Borrar (DELETE)
     Route::delete('petitions/{id}', [PetitionController::class, 'destroy']);
 
-    // Firmar (POST) - Importante: Cambiado a POST para coincidir con el PDF y Angular
+    // 5. Firmar (POST)
     Route::post('petitions/sign/{id}', [PetitionController::class, 'sign']);
 
 });
+
+Route::get('petitions/{id}', [PetitionController::class, 'show']); // Ver detalle

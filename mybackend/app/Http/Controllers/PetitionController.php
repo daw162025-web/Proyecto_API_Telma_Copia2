@@ -86,7 +86,8 @@ class PetitionController extends Controller
             'description' => 'required',
             'destinatary' => 'required',
             'category_id' => 'required|exists:categories,id',
-            'file'        => 'required|file|mimes:jpg,jpeg,png,pdf|max:4096',
+            'files'       => 'required|array',
+            'files.*'     => 'file|mimes:jpg,jpeg,png,pdf|max:4096',
         ]);
 
         if ($validator->fails()) {
@@ -94,30 +95,41 @@ class PetitionController extends Controller
         }
 
         try {
-            // 2. Guardamos el archivo
-            if ($file = $request->file('file')) {
-                // Guarda en storage/app/public/peticiones
-                $path = $file->store('peticiones', 'public');
+            // 2. Creamos la petición PRIMERO
+            // Usamos except(['files']) para que no intente inyectar el array en la base de datos
+            $petition = new Petition($request->except(['files', 'file']));
+            $petition->user_id = Auth::id();
+            $petition->signeds = 0;
+            $petition->status  = 'pending';
+            $petition->save();
 
-                // 3. Creamos la petición
-                $petition = new Petition($request->all());
-                $petition->image = $path;
-                $petition->user_id = Auth::id();
-                $petition->signeds = 0;
-                $petition->status  = 'pending';
-                $petition->save();
-                $petition->users()->attach(Auth::id());
+            // Adjuntamos la firma del creador
+            $petition->users()->attach(Auth::id());
 
-                // 4. Guardamos el registro del archivo en la tabla 'files'
-                $petition->files()->create([
-                    'name'      => $file->getClientOriginalName(),
-                    'file_path' => $path
-                ]);
+            // 3. Guardamos los archivos en bucle
+            if ($request->hasFile('files')) {
+                $esPrimeraFoto = true;
 
-                return $this->sendResponse($petition->load('files'), 'Petición creada con éxito', 201);
+                foreach ($request->file('files') as $file) {
+                    $path = $file->store('peticiones', 'public');
+
+                    // Guardamos la primera imagen en la columna principal para los listados rápidos
+                    if ($esPrimeraFoto) {
+                        $petition->image = $path;
+                        $petition->save();
+                        $esPrimeraFoto = false;
+                    }
+
+                    // Guardamos cada archivo en la tabla 'files'
+                    $petition->files()->create([
+                        'name'      => $file->getClientOriginalName(),
+                        'file_path' => $path
+                    ]);
+                }
             }
 
-            return $this->sendError('El archivo es obligatorio', [], 422);
+            // 4. Devolvemos la petición recién creada con sus archivos
+            return $this->sendResponse($petition->load('files'), 'Petición creada con éxito', 201);
 
         } catch (Exception $e) {
             return $this->sendError('Error al crear la petición', [$e->getMessage()], 500);
@@ -251,6 +263,36 @@ class PetitionController extends Controller
 
         } catch (Exception $e) {
             return $this->sendError('No se pudo firmar la petición', [$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * MIS FIRMAS: Obtener peticiones que he firmado
+     */
+    public function mySignatures()
+    {
+        try {
+            $userId = Auth::id();
+
+            $ids = \Illuminate\Support\Facades\DB::table('petition_user')
+                ->where('user_id', $userId)
+                ->pluck('petition_id');
+
+            // 2. Buscamos las peticiones
+            $petitions = Petition::whereIn('id', $ids)
+                ->with(['category', 'files'])
+                ->get();
+
+            return $this->sendResponse($petitions, 'Peticiones firmadas recuperadas con éxito');
+
+        } catch (\Exception $e) {
+            // AHORA IMPRIMIMOS EL ERROR EXACTO SI FALLA
+            return response()->json([
+                'success' => false,
+                'message' => 'Fallo interno en el backend',
+                'error_real' => $e->getMessage(),
+                'linea' => $e->getLine()
+            ], 500);
         }
     }
 

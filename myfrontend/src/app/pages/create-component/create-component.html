@@ -67,13 +67,11 @@
             <div class="mb-4">
               <label for="file" class="form-label fw-bold">Imagen destacada</label>
               <input 
-                id="file" 
                 type="file" 
                 class="form-control" 
-                (change)="onFileSelected($event)"
-                accept="image/*"
-                [class.is-invalid]="itemForm.get('file')?.invalid && itemForm.get('file')?.touched"
-              >
+                (change)="onFileSelected($event)" 
+                accept="image/png, image/jpeg, application/pdf"
+                multiple>
               <div class="form-text">Sube una imagen que represente tu causa (JPG, PNG).</div>
               <div class="invalid-feedback">Debes subir una imagen.</div>
             </div>

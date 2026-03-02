@@ -63,10 +63,10 @@ export class ListComponent implements OnInit {
     this.petitionService.sign(petition.id).subscribe({
       next: () => {
         petition.signeds = (petition.signeds || 0) + 1;
-        alert('Petition signed successfully');
+        alert('¡Gracias por firmar la petición!');
       },
       error: (err) =>
-        alert('Error signing: ' + (err.error?.message || 'Unknown error')),
+        alert('Error al firmar: ' + (err.error?.message || 'Error desconocido')),
     });
   }
 
@@ -83,17 +83,20 @@ export class ListComponent implements OnInit {
     }
   }
 
-  getImage(pet: any): string {
-    if (pet.files && pet.files.length > 0) { //cojemos el ultimo archivo (el mas reciente)
-      const lastFile = pet.files[pet.files.length - 1];
-      return `http://localhost:8000/storage/${lastFile.file_path}`;
+  getImage(petition: any): string {
+    // 1. Prioridad máxima: Si tiene fotos subidas con el nuevo sistema (array 'files')
+    if (petition.files && petition.files.length > 0) {
+      // Cogemos la primera foto del array (la [0]) para la portada
+      return 'http://localhost:8000/storage/' + petition.files[0].file_path;
     }
-
-    if (pet.image) { //sino miramos la columna de image
-      return `http://localhost:8000/storage/${pet.image}`;
+    
+    // 2. Si no tiene array, pero es una petición vieja que tiene 'image' principal
+    if (petition.image) {
+      return 'http://localhost:8000/storage/' + petition.image;
     }
-
-    return 'assets/imagenes/petition1.jpg'; //por defecto
+    
+    // 3. Si no tiene absolutamente nada, ponemos la imagen de relleno
+    return 'assets/imagenes/placeholder.jpg';
   }
 
   getNow() {
