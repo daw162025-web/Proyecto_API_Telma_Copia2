@@ -124,6 +124,8 @@
       <excludeFolder url="file://$MODULE_DIR$/mybackend/vendor/tijsverkoyen/css-to-inline-styles" />
       <excludeFolder url="file://$MODULE_DIR$/mybackend/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/mybackend/vendor/voku/portable-ascii" />
+      <excludeFolder url="file://$MODULE_DIR$/mybackend/storage/app" />
+      <excludeFolder url="file://$MODULE_DIR$/mybackend/storage/framework" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
