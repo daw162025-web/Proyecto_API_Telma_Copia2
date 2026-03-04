@@ -19,10 +19,10 @@ export const routes: Routes = [
   { path: 'petitions/mysignatures', component: MySignaturesComponent, canActivate: [authGuard] },
   { path: 'petitions/create', component: CreateComponent, canActivate: [authGuard] },
   { path: 'petitions/edit/:id', component: EditComponent, canActivate: [authGuard] },
-  { path: 'petitions/:id', component: ShowComponent },
+  { path: 'petitions/:id', component: ShowComponent }, // Detalle público
 
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'mypetitions', component: MyPetitionsComponent, canActivate: [authGuard] },
 
-  { path: '**', redirectTo: 'login' },
+
 ];
