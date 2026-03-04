@@ -1,23 +1,18 @@
 <div class="container mt-5 mb-5">
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-      
+
       <div class="card shadow border-0">
         <div class="card-body p-5">
           <h3 class="text-center mb-4 fw-bold">Editar Petición</h3>
           <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            
+
             <div class="mb-3">
               <label for="title" class="form-label fw-bold">Título de la petición</label>
-              <input 
-                id="title" 
-                type="text" 
-                class="form-control" 
-                formControlName="title"
-                [class.is-invalid]="form.get('title')?.invalid && form.get('title')?.touched"
-              >
+              <input id="title" type="text" class="form-control" formControlName="title"
+                [class.is-invalid]="form.get('title')?.invalid && form.get('title')?.touched">
               @if (form.get('title')?.invalid && form.get('title')?.touched) {
-                <div class="invalid-feedback">El título es obligatorio.</div>
+              <div class="invalid-feedback">El título es obligatorio.</div>
               }
             </div>
 
@@ -25,45 +20,45 @@
               <label class="form-label text-muted">Categoría</label>
               <select class="form-select" formControlName="category_id">
                 @for (cat of categories(); track cat.id) {
-                  <option [value]="cat.id">{{ cat.name }}</option>
+                <option [value]="cat.id">{{ cat.name }}</option>
                 }
               </select>
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold">Destinatario</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                formControlName="destinatary"
-                [class.is-invalid]="form.get('destinatary')?.invalid && form.get('destinatary')?.touched"
-              >
+              <input type="text" class="form-control" formControlName="destinatary"
+                [class.is-invalid]="form.get('destinatary')?.invalid && form.get('destinatary')?.touched">
             </div>
 
             <div class="mb-3">
               <label class="form-label fw-bold">Descripción</label>
-              <textarea 
-                class="form-control" 
-                rows="5" 
-                formControlName="description"
-                [class.is-invalid]="form.get('description')?.invalid && form.get('description')?.touched"
-              ></textarea>
+              <textarea class="form-control" rows="5" formControlName="description"
+                [class.is-invalid]="form.get('description')?.invalid && form.get('description')?.touched"></textarea>
             </div>
 
             <div class="mb-4">
-              <label class="form-label fw-bold">Imagen (Opcional)</label>
-              <input 
-                type="file" 
-                class="form-control" 
-                (change)="onFileChange($event)" 
-                accept="image/*"
-              >
-              
-              @if (currentImage()) {
-                <div class="mt-3 text-center p-3 border rounded bg-light">
-                  <small class="text-muted d-block mb-2">Imagen actual:</small>
-                  <img [src]="currentImage()" alt="Actual" class="img-fluid rounded" style="max-height: 200px;">
+              <label class="form-label fw-bold">Nuevas Imágenes (Opcionales)</label>
+              <input type="file" class="form-control" (change)="onFileChange($event)" accept="image/*" multiple>
+
+              @if (existingImages().length > 0) {
+              <div class="mt-4 p-3 border rounded bg-light">
+                <small class="text-muted d-block mb-3 fw-bold">Imágenes actuales (Haz clic en la 'x' para
+                  borrar):</small>
+                <div class="row g-3">
+                  @for (img of existingImages(); track img.id; let idx = $index) {
+                  <div class="col-4 col-sm-3 position-relative">
+                    <img [src]="'http://localhost:8000/storage/' + img.file_path" alt="Imagen actual"
+                      class="img-fluid rounded shadow-sm w-100" style="height: 100px; object-fit: cover;">
+                    <button type="button" (click)="removeExistingImage(img.id, idx)"
+                      class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle p-0"
+                      style="width: 24px; height: 24px; line-height: 1;" title="Borrar imagen">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                  }
                 </div>
+              </div>
               }
             </div>
 
@@ -71,7 +66,7 @@
               <button type="submit" class="btn btn-danger btn-lg" [disabled]="form.invalid">
                 Actualizar Petición
               </button>
-              
+
               <a [routerLink]="['/petitions', petitionId]" class="btn btn-outline-secondary">
                 Cancelar
               </a>

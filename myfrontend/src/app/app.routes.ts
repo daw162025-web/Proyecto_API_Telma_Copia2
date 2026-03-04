@@ -15,15 +15,14 @@ export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'petitions', component: ListComponent }, 
+  { path: 'petitions', component: ListComponent },
+  { path: 'petitions/mysignatures', component: MySignaturesComponent, canActivate: [authGuard] },
   { path: 'petitions/create', component: CreateComponent, canActivate: [authGuard] },
   { path: 'petitions/edit/:id', component: EditComponent, canActivate: [authGuard] },
-  { path: 'petitions/:id', component: ShowComponent}, // Detalle público
+  { path: 'petitions/:id', component: ShowComponent },
 
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'mypetitions', component: MyPetitionsComponent, canActivate: [authGuard] },
-  { path: 'petitions/mysignatures', component: MySignaturesComponent, canActivate: [authGuard] },
 
-  // 5. Wildcard: Cualquier ruta desconocida redirige al login o home
   { path: '**', redirectTo: 'login' },
 ];

@@ -1,46 +1,43 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Petition } from '../../models/petition'; 
-import { PetitionService } from '../../petition.service'; 
-import { AuthService } from '../../auth/auth.service'; 
+import { Petition } from '../../models/petition';
+import { PetitionService } from '../../petition.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-my-signatures',
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './my-signatures.html',
-  styleUrl: './my-signatures.css' 
+  styleUrl: './my-signatures.css'
 })
 export class MySignaturesComponent implements OnInit {
   private petitionService = inject(PetitionService);
   public authService = inject(AuthService);
 
-  public signedPetitions: Petition[] = [];
-  public isLoading = true;
+  public signedPetitions = signal<Petition[]>([]);
+  public isLoading = signal<boolean>(true);
 
   ngOnInit(): void {
     this.loadMySignatures();
   }
 
-loadMySignatures() {
-    this.isLoading = true;
-    
+  loadMySignatures() {
+    this.isLoading.set(true);
+
     this.petitionService.getMySignatures().subscribe({
       next: (data: Petition[]) => {
-        // AÑADE ESTA LÍNEA CHIVATA:
-        console.log('DATOS RECIBIDOS DEL BACKEND:', data); 
-        
-        this.signedPetitions = data;
-        this.isLoading = false;
+        console.log('DATOS RECIBIDOS DEL BACKEND:', data);
+        this.signedPetitions.set(data);
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.error('ERROR NUEVO EN FIRMAS:', err);
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }
-  // Usamos el mismo método inteligente para las fotos
   getPetitionImage(pet: any): string {
     if (pet.files && pet.files.length > 0) {
       const lastFile = pet.files[pet.files.length - 1];

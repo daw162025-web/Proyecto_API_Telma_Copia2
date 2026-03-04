@@ -20,8 +20,6 @@ export class PetitionService {
   #petitions = signal<Petition[]>([]);
   #categories = signal<Category[]>([]);
   loading = signal<boolean>(false);
-
-  // Exponemos las peticiones como solo lectura
   allPetitions = this.#petitions.asReadonly();
   allCategories = this.#categories.asReadonly();
 
@@ -85,6 +83,7 @@ fetchCategories() {
       })
     );
   }
+
   sign(id: number) {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.API_URL}/sign/${id}`,
@@ -92,10 +91,8 @@ fetchCategories() {
     );
   }
 
- // petition.service.ts
   getMySignatures() {
-    // Usamos 'mis-firmas' para el backend
-    return this.http.get<any>('http://localhost:8000/api/petitions/mis-firmas').pipe(
+    return this.http.get<any>('http://localhost:8000/api/petitions/my-signatures').pipe(
       map(res => Array.isArray(res) ? res : res.data)
     );
   }

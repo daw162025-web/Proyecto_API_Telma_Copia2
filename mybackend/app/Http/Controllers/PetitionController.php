@@ -9,20 +9,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Exception; // Para los try-catch
+use Exception;
+use Illuminate\Support\Facades\DB;
 
 class PetitionController extends Controller
 {
     /*Metodos auxiliares*/
-    private function sendResponse($data, $message, $code = 200) {
+    private function sendResponse($data, $message, $code = 200)
+    {
         return response()->json([
             'success' => true,
-            'data'    => $data,
+            'data' => $data,
             'message' => $message
         ], $code);
     }
 
-    private function sendError($error, $errorMessages = [], $code = 404) {
+    private function sendError($error, $errorMessages = [], $code = 404)
+    {
         $response = [
             'success' => false,
             'message' => $error,
@@ -41,12 +44,12 @@ class PetitionController extends Controller
             // Cargamos 'categoria' y 'files' para que el JSON venga completo
             $petitions = Petition::with(['category', 'files', 'user'])->get();
             return $this->sendResponse($petitions, 'Peticiones recuperadas con exito.');
-        } catch (Exception $e) {
-            return $this->sendError('Error al recuperar las peticiones',[$e->getMessage(), $e->getCode()]);
+        }
+        catch (Exception $e) {
+            return $this->sendError('Error al recuperar las peticiones', [$e->getMessage(), $e->getCode()]);
         }
     }
-
-//    /**
+    //    /**
 //     * LIST MINE: Listar mis peticiones
 //     */
     public function listMine()
@@ -54,12 +57,13 @@ class PetitionController extends Controller
         try {
             $user = Auth::user(); // Obtenemos usuario desde el Token JWT
             $petitions = Petition::where('user_id', $user->id)
-                ->with(['user','category', 'files'])
+                ->with(['user', 'category', 'files'])
                 ->get();
 
             return $this->sendResponse($petitions, 'Tus peticiones recuperadas con exito.');
-        } catch (Exception $e) {
-            return $this->sendError('Error al recuperar las peticiones',[$e->getMessage(), $e->getCode()]);
+        }
+        catch (Exception $e) {
+            return $this->sendError('Error al recuperar las peticiones', [$e->getMessage(), $e->getCode()]);
         }
     }
 
@@ -71,72 +75,61 @@ class PetitionController extends Controller
         try {
             $petition = Petition::with(['category', 'files', 'user'])->findOrFail($id);
             return $this->sendResponse($petition, 'Peticion recuperada con exito.');
-        } catch (Exception $e) {
-            return $this->sendError('Error al recuperar las peticiones',[$e->getMessage(), $e->getCode()]);
+        }
+        catch (Exception $e) {
+            return $this->sendError('Error al recuperar las peticiones', [$e->getMessage(), $e->getCode()]);
         }
     }
 
     /**
      * STORE: Crear petición
      */
-    public function store(Request $request) {
-        // 1. Validamos los campos
+    public function store(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'title'       => 'required|max:255',
+            'title' => 'required|max:255',
             'description' => 'required',
             'destinatary' => 'required',
             'category_id' => 'required|exists:categories,id',
-            'files'       => 'required|array',
-            'files.*'     => 'file|mimes:jpg,jpeg,png,pdf|max:4096',
+            'files' => 'required|array',
+            'files.*' => 'file|mimes:jpg,jpeg,png,pdf|max:4096',
         ]);
-
         if ($validator->fails()) {
             return $this->sendError('Error de validación', $validator->errors(), 422);
         }
-
         try {
-            // 2. Creamos la petición PRIMERO
-            // Usamos except(['files']) para que no intente inyectar el array en la base de datos
             $petition = new Petition($request->except(['files', 'file']));
             $petition->user_id = Auth::id();
-            $petition->signeds = 0;
-            $petition->status  = 'pending';
+            $petition->signeds = 1;
+            $petition->status = 'pending';
             $petition->save();
-
-            // Adjuntamos la firma del creador
             $petition->users()->attach(Auth::id());
 
-            // 3. Guardamos los archivos en bucle
             if ($request->hasFile('files')) {
                 $esPrimeraFoto = true;
 
                 foreach ($request->file('files') as $file) {
                     $path = $file->store('peticiones', 'public');
 
-                    // Guardamos la primera imagen en la columna principal para los listados rápidos
                     if ($esPrimeraFoto) {
                         $petition->image = $path;
                         $petition->save();
                         $esPrimeraFoto = false;
                     }
-
-                    // Guardamos cada archivo en la tabla 'files'
                     $petition->files()->create([
-                        'name'      => $file->getClientOriginalName(),
+                        'name' => $file->getClientOriginalName(),
                         'file_path' => $path
                     ]);
                 }
             }
-
-            // 4. Devolvemos la petición recién creada con sus archivos
             return $this->sendResponse($petition->load('files'), 'Petición creada con éxito', 201);
-
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return $this->sendError('Error al crear la petición', [$e->getMessage()], 500);
         }
     }
 
-    /**cd myb
+    /**
      * UPDATE: Actualizar
      */
     public function update(Request $request, $id)
@@ -148,29 +141,38 @@ class PetitionController extends Controller
                 return $this->sendError('No autorizado', [], 403);
             }
 
-            $petition->update($request->only(['title', 'description', 'destinatary', 'category_id']));
+            if ($request->has('delete_images')) {
+                $deleteIds = $request->input('delete_images');
 
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $cleanName = str_replace(' ', '_', $file->getClientOriginalName());
-                $finalName = time() . '_' . $cleanName;
+                foreach ($deleteIds as $fileId) {
+                    $fileRecord = $petition->files()->find($fileId);
 
-                // Guardamos el archivo físicamente
-                $path = $file->storeAs('petitions', $finalName, 'public');
+                    if ($fileRecord) {
+                        if (Storage::disk('public')->exists($fileRecord->file_path)) {
+                            Storage::disk('public')->delete($fileRecord->file_path);
+                        }
+                        if ($petition->image === $fileRecord->file_path) {
+                            $petition->image = null;
+                            $petition->save();
+                        }
+                        $fileRecord->delete();
+                    }
+                }
+            }
+            if ($request->hasFile('files')) {
+                $esPrimeraFoto = true;
 
-                // Actualizamos también la columna 'image' de la tabla 'petitions'
-                $petition->image = $path;
-                $petition->save();
+                foreach ($request->file('files') as $file) {
+                    $cleanName = str_replace(' ', '_', $file->getClientOriginalName());
+                    $finalName = time() . '_' . $cleanName;
 
-                // Actualizamos o creamos el registro en la tabla 'files'
-                $fileRecord = $petition->files()->first();
+                    $path = $file->storeAs('petitions', $finalName, 'public');
 
-                if ($fileRecord) {
-                    $fileRecord->update([
-                        'name' => $file->getClientOriginalName(),
-                        'file_path' => $path
-                    ]);
-                } else {
+                    if ($esPrimeraFoto) {
+                        $petition->image = $path;
+                        $petition->save();
+                        $esPrimeraFoto = false;
+                    }
                     $petition->files()->create([
                         'name' => $file->getClientOriginalName(),
                         'file_path' => $path
@@ -180,7 +182,8 @@ class PetitionController extends Controller
 
             return $this->sendResponse($petition->load('files'), 'Petición actualizada con éxito');
 
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return $this->sendError('Error al actualizar', [$e->getMessage()], 500);
         }
     }
@@ -208,12 +211,16 @@ class PetitionController extends Controller
             // A. Borrar archivos adjuntos antiguos (Error anterior)
             try {
                 \Illuminate\Support\Facades\DB::table('files')->where('petition_id', $id)->delete();
-            } catch (\Exception $e) {}
+            }
+            catch (\Exception $e) {
+            }
 
             // B. Borrar las firmas en la tabla intermedia (EL ERROR ACTUAL)
             try {
                 \Illuminate\Support\Facades\DB::table('petition_user')->where('petition_id', $id)->delete();
-            } catch (\Exception $e) {}
+            }
+            catch (\Exception $e) {
+            }
 
             // -------------------------------------
 
@@ -223,7 +230,9 @@ class PetitionController extends Controller
                     if (\Illuminate\Support\Facades\Storage::disk('public')->exists($petition->image)) {
                         \Illuminate\Support\Facades\Storage::disk('public')->delete($petition->image);
                     }
-                } catch (\Exception $e) {}
+                }
+                catch (\Exception $e) {
+                }
             }
 
             // 4. Borrar la petición
@@ -231,7 +240,8 @@ class PetitionController extends Controller
 
             return response()->json(['message' => 'Petición eliminada correctamente'], 200);
 
-        } catch (\Throwable $e) {
+        }
+        catch (\Throwable $e) {
             // Si sale otro error, te lo chivará aquí
             return response()->json(['message' => 'Error eliminando', 'error' => $e->getMessage()], 500);
         }
@@ -261,7 +271,8 @@ class PetitionController extends Controller
 
             return $this->sendResponse($petition, 'Petición firmada con éxito', 201);
 
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return $this->sendError('No se pudo firmar la petición', [$e->getMessage()], 500);
         }
     }
@@ -274,19 +285,19 @@ class PetitionController extends Controller
         try {
             $userId = Auth::id();
 
-            $ids = \Illuminate\Support\Facades\DB::table('petition_user')
+            $ids = DB::table('petition_user')
                 ->where('user_id', $userId)
                 ->pluck('petition_id');
 
-            // 2. Buscamos las peticiones
+            //Buscamos las peticiones
             $petitions = Petition::whereIn('id', $ids)
                 ->with(['category', 'files'])
                 ->get();
 
             return $this->sendResponse($petitions, 'Peticiones firmadas recuperadas con éxito');
 
-        } catch (\Exception $e) {
-            // AHORA IMPRIMIMOS EL ERROR EXACTO SI FALLA
+        }
+        catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fallo interno en el backend',
@@ -307,7 +318,8 @@ class PetitionController extends Controller
             $petition->save();
 
             return $this->sendResponse('Estado cambiado a accepted con exito', 200);
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

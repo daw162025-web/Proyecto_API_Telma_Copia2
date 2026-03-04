@@ -1,0 +1,132 @@
+Subida múltiple de archivos 
+En este caso, vamos a plantear, la súbida múltiple de archivos desde create-peticion y la visualización de
+todas ellas en el show, es decir el detalle de la petición.
+¡Ese es un reto fantástico y un salto de calidad tremendo para tu aplicación! Manejar múltiples archivos
+(Multi-ﬁle upload) es una de las funcionalidades más demandadas en el mundo real.
+Para lograrlo, tenemos que hacer pequeños ajustes en toda la tubería: desde el <input> en Angular,
+pasando por el empaquetado en FormData, hasta el bucle de guardado en Laravel.
+Vamos a dividirlo en 4 pasos claros:
+Fase 1: Angular - El Formulario de Creación 
+1. En create.component.html: 
+Solo tienes que añadir el atributo multiple a tu input de tipo ﬁle para que el navegador permita 
+seleccionar más de una foto a la vez.
+ 
+ 
+2. En create.component.ts: Ahora no recibimos un solo archivo, sino una lista (FileList). Debemos
+guardarlos en un array y luego meterlos uno a uno en el FormData con el nombre files[] (los corchetes
+son vitales para que PHP entienda que es un array).
+ 
+<input type="file" class="form‐control" (change)="onFileChange($event)" multiple 
+accept="image/*">
+// Cambiamos la variable para que sea un array
+filesToUpload: File[] = [];
+ 
+onFileChange(event: any) {
+  if (event.target.files && event.target.files.length > 0) {
+    // Convertimos el FileList a un array de JavaScript
+    this.filesToUpload = Array.from(event.target.files);
+  }
+}
+ 
+// Dentro de tu método de guardar (onSubmit / save):
+guardarPeticion() {
+  const formData = new FormData();
+  formData.append('titulo', this.itemForm.get('titulo')?.value);
+  formData.append('descripcion', this.itemForm.get('descripcion')?.value);
+  formData.append('categoria_id', this.itemForm.get('categoria_id')?.value);
+  // ... resto de campos ...
+ 
+  // EL TRUCO ESTÁ AQUÍ: Iteramos sobre el array de archivos
+  for (let i = 0; i < this.filesToUpload.length; i++) {
+    // OJO: El nombre debe llevar corchetes 'files[]' para que Laravel lo reciba como array
+    formData.append('files[]', this.filesToUpload[i]); 
+  }
+
+Fase 2: Laravel - Guardar múltiples archivos 
+(PeticionController.php)
+ 
+En tu método store (y update si lo deseas), Laravel ahora recibirá un array. Tenemos que validarlo y luego
+recorrerlo con un foreach.
+ 
+Fase 3: Angular - Ver todas las imágenes en el Detalle 
+(show.component.html)
+ 
+ 
+  // Llamada a tu servicio...
+  this.peticionService.create(formData).subscribe({...});
+}
+public function store(Request $request)
+{
+    // 1. Validar (nota el files.* para validar cada elemento del array)
+    $request‐>validate([
+        'titulo' => 'required|string|max:255',
+        // ... otras validaciones ...
+        'files' => 'nullable|array',
+        'files.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048' // Valida cada imagen 
+individualmente
+    ]);
+ 
+    // 2. Crear la petición
+    $peticion = Peticion::create([
+        'titulo' => $request‐>titulo,
+        'descripcion' => $request‐>descripcion,
+        'categoria_id' => $request‐>categoria_id,
+        'user_id' => auth()‐>id(),
+        // ...
+    ]);
+ 
+    // 3. Procesar las múltiples imágenes
+    if ($request‐>hasFile('files')) {
+        foreach ($request‐>file('files') as $file) {
+            // Guardamos el archivo en el disco public
+            $path = $file‐>store('peticiones', 'public');
+ 
+            // Creamos el registro en la tabla relacionada
+            $peticion‐>files()‐>create([
+                'file_path' => $path
+            ]);
+        }
+    }
+ 
+    return response()‐>json(['message' => 'Petición creada con éxito', 'data' => $peticion], 
+201);
+}
+
+En la vista de detalle, iteramos sobre el array de archivos de la petición. Podemos mostrarlas en una
+cuadrícula sencilla:
+ 
+Fase 4: Angular - Mostrar solo la última imagen en los listados 
+En los componentes de listas (Index, MisPeticiones, MisFirmas), ya tienes un método
+getImagenUrl(peticion). Solo tenemos que modiﬁcarlo para que coja el último elemento del array en
+lugar del primero (que es el índice 0).
+ 
+ 
+Tarea: Realizar un documento word, en el que se explicite los módulos cambiados y aquello que
+hayáis modiﬁcado tanto en back como en front. Realizar un pequeño vídeo en el que se explique la
+nueva funcionalidad, se vea la conexión entre Laravel y Angular y el contenido de la BBDD, así como el
+almacenamiento en el Sistema de archivos de Laravel.
+ 
+@if (peticion()?.files && peticion()?.files?.length! > 0) {
+  <div class="row g‐2 mb‐4">
+    @for (file of peticion()?.files; track file.id) {
+      <div class="col‐12 col‐md‐6 col‐lg‐4">
+        <img [src]="'http://localhost:8000/storage/' + file.file_path" 
+             class="img‐fluid rounded shadow‐sm" 
+             alt="Imagen de la petición"
+             style="height: 250px; width: 100%; object‐fit: cover;">
+      </div>
+    }
+  </div>
+} @else {
+  <img src="assets/no‐image.png" class="img‐fluid rounded mb‐4">
+}
+getImagenUrl(peticion: Peticion): string {
+  if (peticion.files && peticion.files.length > 0) {
+    // Obtenemos el último índice del array
+    const ultimoIndice = peticion.files.length ‐ 1;
+    const path = peticion.files[ultimoIndice].file_path;
+ 
+    return `${this.API_STORAGE}${path}`;
+  }
+  return 'assets/no‐image.png'; 
+}

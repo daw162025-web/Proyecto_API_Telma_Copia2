@@ -36,7 +36,6 @@ export class ListComponent implements OnInit {
   }
 
   loadPetitions(categoryId?: string) {
-    // Usamos el Signal del servicio para que todo el sitio sepa que carga
     this.authService.loading.set(true); 
 
     this.petitionService.fetchPetitions().subscribe({
@@ -46,12 +45,10 @@ export class ListComponent implements OnInit {
           ? this.allPetitions.filter(p => p.category_id == Number(categoryId)) 
           : data;
         
-        // Apagamos el Signal
         this.authService.loading.set(false); 
       },
       error: (err) => {
         console.error('Error:', err);
-        //Apagarlo también en caso de error
         this.authService.loading.set(false); 
       }
     });
@@ -84,18 +81,14 @@ export class ListComponent implements OnInit {
   }
 
   getImage(petition: any): string {
-    // 1. Prioridad máxima: Si tiene fotos subidas con el nuevo sistema (array 'files')
     if (petition.files && petition.files.length > 0) {
-      // Cogemos la primera foto del array (la [0]) para la portada
       return 'http://localhost:8000/storage/' + petition.files[0].file_path;
     }
     
-    // 2. Si no tiene array, pero es una petición vieja que tiene 'image' principal
     if (petition.image) {
       return 'http://localhost:8000/storage/' + petition.image;
     }
     
-    // 3. Si no tiene absolutamente nada, ponemos la imagen de relleno
     return 'assets/imagenes/placeholder.jpg';
   }
 

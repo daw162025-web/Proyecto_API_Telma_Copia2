@@ -16,26 +16,17 @@ Route::middleware('auth:api')->group(function () {
 });
 
 // RUTAS PÚBLICAS DE PETICIONES
-Route::get('petitions', [PetitionController::class, 'index']); // Listar todas
+Route::get('petitions', [PetitionController::class, 'index']); 
 Route::get('categories', [CategoryController::class, 'index']);
 
-// RUTAS PROTEGIDAS DE PETICIONES (auth:api)
+// RUTAS PROTEGIDAS DE PETICIONES 
 Route::middleware('auth:api')->group(function () {
-
-    Route::get('petitions/mis-firmas', [PetitionController::class, 'mySignatures']);
-
-    // 2. Crear (POST)
+    Route::get('petitions/my-signatures', [PetitionController::class, 'mySignatures']);
     Route::post('petitions', [PetitionController::class, 'store']);
-
-    // 3. Actualizar (PUT)
     Route::put('petitions/{id}', [PetitionController::class, 'update']);
-
-    // 4. Borrar (DELETE)
     Route::delete('petitions/{id}', [PetitionController::class, 'destroy']);
-
-    // 5. Firmar (POST)
     Route::post('petitions/sign/{id}', [PetitionController::class, 'sign']);
 
 });
 
-Route::get('petitions/{id}', [PetitionController::class, 'show']); // Ver detalle
+Route::get('petitions/{id}', [PetitionController::class, 'show']); 

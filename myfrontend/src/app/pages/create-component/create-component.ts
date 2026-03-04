@@ -19,13 +19,12 @@ export class CreateComponent implements OnInit {
   loading = signal(false);
   selectedFiles: File[] = [];
 
-  // Fíjate que se llama itemForm
   itemForm = this.fb.group({
     title: ['', [Validators.required]],
     description: ['', [Validators.required]],
     destinatary: ['', [Validators.required]],
     category_id: ['', [Validators.required]],
-    file: [null] // Quitamos el required aquí para validarlo a mano con selectedFiles
+    file: [null]
   });
 
   ngOnInit(): void {
@@ -34,34 +33,27 @@ export class CreateComponent implements OnInit {
 
   onFileSelected(event: any) {
     if (event.target.files && event.target.files.length > 0) {
-      // Guardamos todos los archivos seleccionados
       this.selectedFiles = Array.from(event.target.files);
     }
   }
 
   onSubmit() {
-    // 1. Validamos que haya datos y al menos un archivo
     if (this.itemForm.invalid || this.selectedFiles.length === 0) {
       alert('Por favor, rellena todos los campos obligatorios y sube al menos una imagen.');
       return;
     }
 
-    this.loading.set(true); // Activamos el spinner
+    this.loading.set(true); 
     const formData = new FormData();
 
-    // 2. CORRECCIÓN: Usamos this.itemForm en lugar de this.form
-    // El || '' asegura que si es null, mande un string vacío para que no falle FormData
     formData.append('title', this.itemForm.get('title')?.value || '');
     formData.append('description', this.itemForm.get('description')?.value || '');
     formData.append('destinatary', this.itemForm.get('destinatary')?.value || '');
     formData.append('category_id', this.itemForm.get('category_id')?.value || '');
 
-    // 3. Bucle para añadir todos los archivos con el nombre 'files[]'
     this.selectedFiles.forEach((file) => {
       formData.append('files[]', file);
     });
-
-    // 4. Enviamos al backend
     this.petitionService.create(formData).subscribe({
       next: () => {
         this.loading.set(false);
@@ -73,7 +65,7 @@ export class CreateComponent implements OnInit {
         
         if (err.status === 422) {
           console.error('⚠️ LA VALIDACIÓN DE LARAVEL HA FALLADO ⚠️');
-          console.table(err.error.errors); // Esto imprimirá una tabla bonita con los errores
+          console.table(err.error.errors); 
           alert('Error: Revisa la consola, hay un problema con los datos (foto muy grande, categoría vacía...)');
         } else {
           console.error('Error desconocido:', err);
