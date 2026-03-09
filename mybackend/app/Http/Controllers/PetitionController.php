@@ -41,8 +41,7 @@ class PetitionController extends Controller
     public function index()
     {
         try {
-            // Cargamos 'categoria' y 'files' para que el JSON venga completo
-            $petitions = Petition::with(['category', 'files', 'user'])->get();
+            $petitions = Petition::with(['category', 'files', 'user', 'users'])->get();
             return $this->sendResponse($petitions, 'Peticiones recuperadas con exito.');
         }
         catch (Exception $e) {

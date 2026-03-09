@@ -126,6 +126,7 @@
       <excludeFolder url="file://$MODULE_DIR$/mybackend/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/mybackend/storage/app" />
       <excludeFolder url="file://$MODULE_DIR$/mybackend/storage/framework" />
+      <excludeFolder url="file://$MODULE_DIR$/mybackend/vendor/smalot/pdfparser" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

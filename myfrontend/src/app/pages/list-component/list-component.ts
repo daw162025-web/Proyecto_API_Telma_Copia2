@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component,signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Petition } from '../../models/petition';
@@ -13,20 +13,47 @@ import { AuthService } from '../../auth/auth.service';
   styleUrl: './list-component.css',
 })
 export class ListComponent implements OnInit {
-  // Services
-  private petitionService = inject(PetitionService);
+  public petitionService = inject(PetitionService);
   public authService = inject(AuthService); 
   private route = inject(ActivatedRoute);
+
+  selectedCategory = signal<string>('all');
+  selectedStatus = signal<string>('all');
 
   public petitions: Petition[] = [];
   public allPetitions: Petition[] = [];
 
+// Se recalcula solo cuando cambias un filtro
+  filteredPetitions = computed(() => {
+    let result = this.petitionService.allPetitions() as any[];
+    const cat = this.selectedCategory();
+    const stat = this.selectedStatus();
+    const userId = this.authService.currentUser()?.id;
+
+    // Categoría
+    if (cat !== 'all') {
+      result = result.filter(p => p.category_id == cat); 
+    }
+
+    //Firmadas / No firmadas
+    if (stat !== 'all' && userId) {
+      result = result.filter(p => {
+        const hasSigned = p.users?.some((u: any) => u.id === userId);
+        return stat === 'signed' ? hasSigned : !hasSigned;
+      });
+    }
+    return result; 
+  });
+
   ngOnInit(): void {
     this.petitionService.fetchCategories().subscribe();
-    // Primero nos suscribimos a los cambios de la URL
-    this.route.queryParams.subscribe((params) => {
-      this.loadPetitions(params['category_id']);
-    });
+    this.petitionService.fetchPetitions().subscribe();
+    // Si entramos a la página con una categoría en la URL, la aplicamos al Signal
+    // this.route.queryParams.subscribe((params) => {
+    //   if (params['category_id']) {
+    //     this.selectedCategory.set(params['category_id']);
+    //   }
+    // });
   }
   
   getCategoryName(id: number): string {
