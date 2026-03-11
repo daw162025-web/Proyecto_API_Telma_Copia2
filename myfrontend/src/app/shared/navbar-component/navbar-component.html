@@ -17,27 +17,27 @@
       <div class="collapse navbar-collapse" id="navMain">
         
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <!-- @if (authService.isLoggedIn()) {
-            <li class="nav-item"><a class="nav-link" routerLink="/mypetitions">Mis peticiones</a></li>
-            <li class="nav-item"><a class="nav-link" routerLink="/mysignatures">Mis peticiones firmadas</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Programa de socios/as</a></li>
-          } -->
           <li class="nav-item">
             <a class="nav-link" routerLink="/petitions">Ver peticiones</a>
           </li>
-
           <li class="nav-item">
-            <a class="nav-link" routerLink="/mypetitions">
-              Mis Peticiones
-            </a>
+            <a class="nav-link" routerLink="/mypetitions">Mis Peticiones</a>
           </li>
-
           <li class="nav-item">
-            <a class="nav-link" routerLink="/petitions/mysignatures">
-              Mis firmas
-            </a>
+            <a class="nav-link" routerLink="/petitions/mysignatures">Mis firmas</a>
           </li>
         </ul>
+
+        <form class="d-flex mx-lg-4 my-3 my-lg-0 flex-grow-1" style="max-width: 400px;" role="search">
+          <input 
+            class="form-control rounded-pill bg-light border-0 px-3 py-2" 
+            type="search" 
+            placeholder="Buscar por título..." 
+            aria-label="Search"
+            [value]="searchService.searchTerm()"
+            (input)="searchService.searchTerm.set($any($event.target).value)"
+          >
+        </form>
 
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
           
@@ -58,25 +58,21 @@
                 <span class="fw-bold text-dark">{{ authService.currentUser()?.name }}</span>
               </a>
               
-              <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                 <li>
                   <div class="dropdown-header text-center">
                     <h6 class="mb-0 text-dark">{{ authService.currentUser()?.name }}</h6>
                     <small class="text-muted">{{ authService.currentUser()?.email }}</small>
                   </div>
                 </li>
-                
                 <li><hr class="dropdown-divider"></li>
-                
                 <li>
-                    <a class="dropdown-item" routerLink="/profile">
+                    <a class="dropdown-item py-2" routerLink="/profile">
                         <i class="bi bi-person me-2"></i> Mi Perfil
                     </a>
                 </li>
-                
                 <li>
-                  <button (click)="onLogout()" class="dropdown-item text-danger">
+                  <button (click)="onLogout()" class="dropdown-item text-danger py-2">
                     <i class="bi bi-box-arrow-right me-2"></i> Salir
                   </button>
                 </li>

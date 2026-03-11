@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { CommonModule } from '@angular/common';
+import { SearchService } from '../../search.service';
 
 @Component({
   selector: 'app-navbar-component',
@@ -12,6 +13,7 @@ import { CommonModule } from '@angular/common';
 })
 export class NavbarComponent {
   public authService = inject(AuthService);
+  public searchService = inject(SearchService);
   public router = inject(Router);
 
   public currentUser = this.authService.currentUser;

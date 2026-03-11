@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Petition } from '../../models/petition';
 import { PetitionService } from '../../petition.service';
 import { AuthService } from '../../auth/auth.service';
+import { SearchService } from '../../search.service';
 
 @Component({
   selector: 'app-list-component',
@@ -15,6 +16,7 @@ import { AuthService } from '../../auth/auth.service';
 export class ListComponent implements OnInit {
   public petitionService = inject(PetitionService);
   public authService = inject(AuthService); 
+  public searchService = inject(SearchService);
   private route = inject(ActivatedRoute);
 
   selectedCategory = signal<string>('all');
@@ -29,7 +31,12 @@ export class ListComponent implements OnInit {
     const cat = this.selectedCategory();
     const stat = this.selectedStatus();
     const userId = this.authService.currentUser()?.id;
+    const search = this.searchService.searchTerm().toLowerCase().trim();
 
+    if (search !== '') {
+      result = result.filter(p => p.title.toLowerCase().includes(search));
+    }
+    
     // Categoría
     if (cat !== 'all') {
       result = result.filter(p => p.category_id == cat); 
