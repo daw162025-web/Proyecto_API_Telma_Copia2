@@ -7,10 +7,10 @@
   </div>
 
   <div class="row mb-4 bg-light p-3 rounded shadow-sm">
-    
     <div class="col-md-6 mb-3 mb-md-0">
       <label class="form-label fw-bold">Filtrar por Categoría:</label>
-      <select class="form-select" (change)="selectedCategory.set($any($event.target).value)" [value]="selectedCategory()">
+      <select class="form-select" (change)="selectedCategory.set($any($event.target).value); 
+      currentPage.set(1)" [value]="selectedCategory()">
         <option value="all">Todas las categorías</option>
         @for (cat of petitionService.allCategories(); track cat.id) {
           <option [value]="cat.id">{{ cat.name }}</option>
@@ -20,8 +20,8 @@
 
     <div class="col-md-6">
       <label class="form-label fw-bold">Estado de mis firmas:</label>
-      <select class="form-select" (change)="selectedStatus.set($any($event.target).value)" [value]="selectedStatus()" 
-      [disabled]="!authService.isLoggedIn()">
+      <select class="form-select" (change)="selectedStatus.set($any($event.target).value); 
+      currentPage.set(1)" [value]="selectedStatus()" [disabled]="!authService.isLoggedIn()">
         <option value="all">Mostrar todas</option>
         <option value="signed">Solo las que he firmado</option>
         <option value="unsigned">Las que me faltan por firmar</option>
@@ -32,63 +32,114 @@
     </div>
   </div>
 
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    @for (petition of filteredPetitions(); track petition.id) {
-      <div class="col">
-        <div class="card h-100 shadow-sm border-0 card-hover">
-          
-          <div class="position-relative">
-            <img [src]="getImage(petition)" class="card-img-top" alt="{{ petition.title }}" style="height: 200px; object-fit: cover;">
-            <span class="badge bg-danger position-absolute top-0 end-0 m-2 shadow-sm">
-              {{ $any(petition).category?.name || 'General' }}
-            </span>
-          </div>
+  @if (authService.loading()) {
+  <div class="d-flex justify-content-center mt-5">
+    <div class="spinner-border text-danger" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+  } @else {
 
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title fw-bold text-truncate" title="{{ petition.title }}">{{ petition.title }}</h5>
-            <p class="card-text text-muted small flex-grow-1">
-              {{ (petition.description || '').substring(0, 100) }}...
-            </p>
-            
-            <div class="mt-3">
-              <div class="d-flex justify-content-between small fw-bold mb-1">
-                <span>{{ $any(petition).signeds || 0 }} firmas</span>
-                <span class="text-danger">Objetivo: 1.000</span>
-              </div>
-              <div class="progress" style="height: 6px;">
-                <div class="progress-bar bg-danger" role="progressbar" [style.width.%]="(($any(petition).signeds || 0) / 1000) * 100"></div>
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    @for (petition of paginatedPetitions(); track petition.id) {
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0 card-hover">
+
+        <div class="position-relative">
+          <img [src]="getImage(petition)" class="card-img-top" alt="{{ petition.title }}"
+            style="height: 200px; object-fit: cover;">
+
+          <span class="badge bg-danger position-absolute top-0 end-0 m-2 shadow-sm">
+            {{ $any(petition).category?.name || 'General' }}
+          </span>
+        </div>
+
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title fw-bold text-truncate" title="{{ petition.title }}">
+            {{ petition.title }}
+          </h5>
+
+          <p class="card-text text-muted small flex-grow-1">
+            {{ (petition.description || '').substring(0, 100) }}...
+          </p>
+
+          <div class="mt-3">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+              <span>{{ $any(petition).signeds || 0 }} firmas</span>
+              <span class="text-danger">Objetivo: 1.000</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-danger" role="progressbar"
+                [style.width.%]="(($any(petition).signeds || 0) / 1000) * 100" aria-valuenow="0" aria-valuemin="0"
+                aria-valuemax="1000">
               </div>
             </div>
           </div>
-
-          <div class="card-footer bg-white border-top-0 pb-3 d-flex justify-content-between align-items-center">
-            <a [routerLink]="['/petitions', petition.id]" class="btn btn-outline-dark btn-sm rounded-pill px-3">Ver más</a>
-
-            @if (authService.isLoggedIn()) {
-              @if (authService.currentUser()?.id === petition.user_id) {
-                <button (click)="delete(petition.id!)" class="btn btn-outline-danger btn-sm rounded-pill">
-                  <i class="bi bi-trash"></i>
-                </button>
-              } @else {
-                <button (click)="sign(petition)" class="btn btn-danger btn-sm rounded-pill px-3 text-white fw-bold">
-                  Firmar
-                </button>
-              }
-            }
-          </div>
-          
         </div>
-      </div>
-    } @empty {
-      <div class="col-12 text-center mt-5 w-100">
-        <div class="alert alert-light" role="alert">
-          <h4>No hay peticiones con estos filtros</h4>
-          <button class="btn btn-outline-secondary mt-3 me-2" (click)="selectedCategory.set('all'); selectedStatus.set('all')">
-            Limpiar filtros
+
+        <div class="card-footer bg-white border-top-0 pb-3 d-flex justify-content-between align-items-center">
+          <a [routerLink]="['/petitions', petition.id]" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+            Ver más
+          </a>
+
+          @if (authService.isLoggedIn()) {
+
+          @if (authService.currentUser()?.id === petition.user_id) {
+          <button (click)="delete(petition.id!)" class="btn btn-outline-danger btn-sm rounded-pill"
+            title="Borrar petición">
+            <i class="bi bi-trash"></i>
           </button>
+          }
+          @else {
+          <button (click)="sign(petition)" class="btn btn-danger btn-sm rounded-pill px-3 text-white fw-bold">
+            Firmar
+          </button>
+          }
+
+          }
         </div>
       </div>
+    </div>
+    } @empty {
+    <div class="col-12 text-center mt-5">
+      <div class="alert alert-light" role="alert">
+        <h4>No hay peticiones disponibles</h4>
+        <p>Sé el primero en crear una.</p>
+        @if (authService.isLoggedIn()) {
+        <a routerLink="/petitions/create" class="btn btn-danger">Crear Petición</a>
+        }
+      </div>
+    </div>
     }
   </div>
 
+    @if (totalPages() > 1) {
+      <nav aria-label="Navegación de peticiones" class="mt-5 mb-4">
+        <ul class="pagination justify-content-center">
+          
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <button class="page-link text-danger fw-bold shadow-sm" (click)="prevPage()" 
+            [style.cursor]="currentPage() === 1 ? 'not-allowed' : 'pointer'">
+              &laquo; Anterior
+            </button>
+          </li>
+
+          <li class="page-item disabled">
+            <span class="page-link bg-light text-dark fw-bold border-danger border-opacity-25 px-4">
+              Página {{ currentPage() }} de {{ totalPages() }}
+            </span>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <button class="page-link text-danger fw-bold shadow-sm" (click)="nextPage()" 
+            [style.cursor]="currentPage() === totalPages() ? 'not-allowed' : 'pointer'">
+              Siguiente &raquo;
+            </button>
+          </li>
+
+        </ul>
+      </nav>
+    }
+
+  }
 </div>

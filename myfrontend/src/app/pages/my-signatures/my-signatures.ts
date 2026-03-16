@@ -40,13 +40,12 @@ export class MySignaturesComponent implements OnInit {
   }
   getPetitionImage(pet: any): string {
     if (pet.files && pet.files.length > 0) {
-      return 'http://localhost:8000/storage/' + pet.files[0].file_path;
+      const lastFile = pet.files[pet.files.length - 1];
+      return `http://localhost:8000/storage/${lastFile.file_path}`;
     }
-    
     if (pet.image) {
-      return 'http://localhost:8000/storage/' + pet.image;
+      return `http://localhost:8000/storage/${pet.image}`;
     }
-    
     return 'assets/imagenes/placeholder.jpg';
   }
 }

@@ -25,6 +25,9 @@ export class ListComponent implements OnInit {
   public petitions: Petition[] = [];
   public allPetitions: Petition[] = [];
 
+  currentPage = signal<number>(1);
+  itemsPerPage = 6; //las cards que va a ver por pagina
+
 // Se recalcula solo cuando cambias un filtro
   filteredPetitions = computed(() => {
     let result = this.petitionService.allPetitions() as any[];
@@ -128,5 +131,39 @@ export class ListComponent implements OnInit {
 
   getNow() {
     return Date.now();
+  }
+
+  // Calculamos el total de páginas basándonos en las peticiones filtradas
+  totalPages = computed(() => {
+    return Math.ceil(this.filteredPetitions().length / this.itemsPerPage) || 1;
+  });
+
+  //Corta el array filtrado para mostrar solo los de la página actual
+  paginatedPetitions = computed(() => {
+    const petitions = this.filteredPetitions();
+    let page = this.currentPage();
+
+    //si filtramos y la página actual ya no existe, volvemos a mostrar la 1
+    if ((page - 1) * this.itemsPerPage >= petitions.length) {
+      page = 1; 
+    }
+
+    const startIndex = (page - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+
+    return petitions.slice(startIndex, endIndex);
+  });
+
+  //metodos para los botones: 
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update(p => p + 1);
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+    }
   }
 }
