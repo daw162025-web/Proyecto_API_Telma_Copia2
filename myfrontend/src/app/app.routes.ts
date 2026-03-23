@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth-guard';
+import { adminGuard } from './auth/admin-guard';
 import { LoginComponent } from './pages/login/login';
 import { RegisterComponent } from './pages/register/register';
 import { ProfileComponent } from './pages/profile/profile';
@@ -10,6 +11,9 @@ import { ShowComponent } from './pages/show-component/show-component';
 import { HomeComponent } from './home/home-component/home-component';
 import { MyPetitionsComponent } from './pages/mypetitions-component/mypetitions-component';
 import { MySignaturesComponent } from './pages/my-signatures/my-signatures';
+import { PanelComponent } from './admin/panel/panel';
+import {AdminShowPetition} from './admin/petitions/admin-show-petition/admin-show-petition'
+import {AdminEditPetitionComponent} from './admin/petitions/admin-edit-petition/admin-edit-petition'
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -24,5 +28,23 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'mypetitions', component: MyPetitionsComponent, canActivate: [authGuard] },
 
+  { 
+    path: 'admin', 
+    component: PanelComponent, 
+    canActivate: [adminGuard] 
+  },
+  {
+    path: 'admin/petitions/:id',
+    component: AdminShowPetition,
+    canActivate: [adminGuard]
+    },
+    {
+    path: 'admin/petitions/edit/:id',
+    component: AdminEditPetitionComponent,
+    canActivate: [adminGuard]
+    },
+   
 
+
+  { path: '**', redirectTo: '' }
 ];

@@ -1,0 +1,171 @@
+<div class="container-fluid mt-4 mb-5">
+  <div class="row">
+    <div class="col-md-3 col-lg-2">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white fw-bold">
+          <i class="bi bi-gear-fill me-2"></i> Gestión
+        </div>
+        <div class="list-group list-group-flush">
+          <button type="button" class="list-group-item list-group-item-action"
+                  [class.active]="activeSection() === 'petitions'"
+                  (click)="changeSections('petitions')">
+            <i class="bi bi-file-earmark-text me-2"></i> Peticiones
+          </button>
+          <button type="button" class="list-group-item list-group-item-action"
+                  [class.active]="activeSection() === 'categories'"
+                  (click)="changeSections('categories')">
+            <i class="bi bi-tags me-2"></i> Categorías
+          </button>
+          <button type="button" class="list-group-item list-group-item-action"
+                  [class.active]="activeSection() === 'users'"
+                  (click)="changeSections('users')">
+            <i class="bi bi-people me-2"></i> Usuarios
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9 col-lg-10">
+      
+      @if (activeSection() === 'petitions') {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="m-0"><i class="bi bi-file-earmark-text text-danger me-2"></i> Peticiones</h3>
+          <span class="badge bg-primary fs-6">Total: {{ petitions().length }}</span>
+        </div>
+
+        @if (loading()) {
+          <div class="text-center my-5">
+            <div class="spinner-border text-danger" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else {
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col" class="ps-3">ID</th>
+                      <th scope="col">Título</th>
+                      <th scope="col">Autor</th>
+                      <th scope="col">Categoría</th>
+                      <th scope="col" class="text-center">Firmas</th>
+                      <th scope="col" class="text-center pe-3">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (petition of petitions(); track petition.id) {
+                      <tr>
+                        <td class="ps-3 fw-bold text-muted">{{ petition.id }}</td>
+                        
+                        <td>{{ petition.title?.length > 40 ? (petition.title | slice:0:40) + '...' : petition.title }}</td>
+                        
+                        <td>{{ petition.user?.name || 'Desconocido' }}</td>
+                        
+                        <td><span class="badge bg-secondary">{{ petition.category?.name || 'Sin categoría' }}</span></td>
+                        
+                        <td class="text-center fw-bold text-success">{{ petition.signeds || 0 }}</td>
+                        
+                        <td class="text-center pe-3">
+                          <div class="btn-group shadow-sm" role="group">
+                            <a [routerLink]="['/admin/petitions', petition.id]" class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                              <i class="bi bi-eye-fill"></i>
+                            </a>
+                            <a [routerLink]="['/admin/petitions/edit', petition.id]" class="btn btn-sm btn-outline-warning" title="Editar petición">
+                              <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" (click)="deletePetition(petition.id)" title="Borrar petición">
+                              <i class="bi bi-trash3-fill"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                          No hay ninguna petición registrada en el sistema.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      @if (activeSection() === 'categories') {
+        <div>
+          <h3><i class="bi bi-tags text-primary me-2"></i> Gestión de Categorías</h3>
+          <span class="badge bg-primary fs-6">Total: {{ categories().length }}</span>
+        </div>
+
+        @if (loading()) {
+          <div class="text-center my-5">
+            <div class="spinner-border text-danger" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        } @else {
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col" class="ps-3">ID</th>
+                      <th scope="col">Título</th>
+                      <th scope="col">Descripción</th>
+                      <th scope="col" class="text-center pe-3">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (category of categories(); track category.id) {
+                      <tr>
+                        <td class="ps-3 fw-bold text-muted">{{ category.id }}</td>
+                        
+                        <td>{{ category.name?.length > 40 ? (category.name | slice:0:40) + '...' : category.name }}</td>
+        
+                        
+                        <td><span class="badge bg-secondary">{{ category.description || 'Sin descripción' }}</span></td>
+                        
+                        
+                        <td class="text-center pe-3">
+                          <div class="btn-group shadow-sm" role="group">
+                            <a [routerLink]="['/admin/categories', category.id]" class="btn btn-sm btn-outline-primary" title="Ver detalle">
+                              <i class="bi bi-eye-fill"></i>
+                            </a>
+                            <a [routerLink]="['/admin/categories/edit', category.id]" class="btn btn-sm btn-outline-warning" title="Editar categoria">
+                              <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" (click)="deleteCategory(category.id)" title="Borrar categoria">
+                              <i class="bi bi-trash3-fill"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                          No hay ninguna categoria registrada en el sistema.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      @if (activeSection() === 'users') {
+        <div>
+          <h3><i class="bi bi-people text-success me-2"></i> Gestión de Usuarios</h3>
+        </div>
+      }
+    </div>
+  </div>
+</div>

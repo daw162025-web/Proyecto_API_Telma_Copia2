@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -16,10 +17,10 @@ Route::middleware('auth:api')->group(function () {
 });
 
 // RUTAS PÚBLICAS DE PETICIONES
-Route::get('petitions', [PetitionController::class, 'index']); 
+Route::get('petitions', [PetitionController::class, 'index']);
 Route::get('categories', [CategoryController::class, 'index']);
 
-// RUTAS PROTEGIDAS DE PETICIONES 
+// RUTAS PROTEGIDAS DE PETICIONES
 Route::middleware('auth:api')->group(function () {
     Route::get('petitions/my-signatures', [PetitionController::class, 'mySignatures']);
     Route::post('petitions', [PetitionController::class, 'store']);
@@ -29,4 +30,14 @@ Route::middleware('auth:api')->group(function () {
 
 });
 
-Route::get('petitions/{id}', [PetitionController::class, 'show']); 
+// RUTAS DE ADMINISTRADOR
+Route::middleware(['auth:api', 'is_admin'])->prefix('admin')->group(function () {
+    // Listar todas las peticiones
+    Route::get('/petitions', [AdminController::class, 'indexPetitions']);
+    // Eliminar una petición
+    Route::delete('/petitions/{id}', [AdminController::class, 'destroyPetition']);
+    Route::get('/categories', [AdminController::class, 'indexCategories']);
+    Route::delete('/categories/{id}', [AdminController::class, 'destroyCategory']);
+});
+
+Route::get('petitions/{id}', [PetitionController::class, 'show']);

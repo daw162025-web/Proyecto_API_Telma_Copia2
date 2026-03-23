@@ -30,9 +30,10 @@ class PetitionPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Petition $petition): bool
+    public function update(User $user, Petition $petition)
     {
-        return $petition->user_id==$user->id;
+        // Le dejamos pasar si es administrador O si es el creador de la petición
+        return $user->role === 'admin' || $user->id === $petition->user_id;
     }
     /**
      * Determine whether the user can delete the model.

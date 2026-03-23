@@ -29,9 +29,12 @@ export class LoginComponent {
     this.loading.set(true);
     this.auth.login({ email: this.email, password: this.password }).subscribe({
       next: () => {
-        // Si todo va bien, nos vamos a las peticiones
-        this.loading.set(false);
-        this.router.navigate(['/petitions']);
+        if (this.auth.isAdmin()) {
+        this.router.navigate(['/admin']); // al panel 
+        } else {
+        this.router.navigate(['/petitions']); // Al listado normal
+        }
+
       },
       error: (err: { status: number }) => {
         this.loading.set(false);

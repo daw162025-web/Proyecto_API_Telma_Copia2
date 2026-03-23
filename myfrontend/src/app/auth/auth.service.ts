@@ -106,7 +106,8 @@ export class AuthService {
       tap((user) => this.userSubject.next(user))
     );
   }
-   loadUserIfNeeded() {
+
+  loadUserIfNeeded() {
 
     if (this.getAccessToken() && !this.userSubject.value) {
 
@@ -117,5 +118,9 @@ export class AuthService {
       });
 
     }
+  }
+
+  isAdmin(): boolean {
+    return this.currentUser()?.role === 'admin';
   }
 }

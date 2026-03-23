@@ -56,6 +56,10 @@
                     alt="Profile" 
                     style="width: 35px; height: 35px; object-fit: cover;">
                 <span class="fw-bold text-dark">{{ authService.currentUser()?.name }}</span>
+                
+                @if (authService.isAdmin()) {
+                  <span class="badge bg-danger ms-2">Admin</span>
+                }
               </a>
               
               <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
@@ -66,6 +70,16 @@
                   </div>
                 </li>
                 <li><hr class="dropdown-divider"></li>
+                
+                @if (authService.isAdmin()) {
+                  <li>
+                    <a class="dropdown-item py-2 fw-bold text-primary" routerLink="/admin">
+                      <i class="bi bi-shield-lock-fill me-2"></i> Panel de Control
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                }
+                
                 <li>
                     <a class="dropdown-item py-2" routerLink="/profile">
                         <i class="bi bi-person me-2"></i> Mi Perfil

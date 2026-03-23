@@ -1,0 +1,103 @@
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0">
+        
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center py-3">
+          <span class="fs-5"><i class="bi bi-pencil-square me-2"></i> Editar Petición (Modo Admin)</span>
+          <a routerLink="/admin" class="btn btn-sm btn-dark"><i class="bi bi-arrow-left"></i> Volver al panel</a>
+        </div>
+
+        <div class="card-body p-4">
+          @if (loading()) {
+            <div class="text-center my-5">
+              <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+          } @else {
+            <form (ngSubmit)="saveChanges()">
+              
+              <div class="mb-4">
+                <label class="form-label fw-bold text-muted">Título de la causa</label>
+                <input 
+                  type="text" 
+                  class="form-control form-control-lg" 
+                  name="title" 
+                  [(ngModel)]="formData.title" 
+                  required>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label fw-bold text-muted">Descripción detallada</label>
+                <textarea 
+                  class="form-control" 
+                  name="description" 
+                  rows="6" 
+                  [(ngModel)]="formData.description" 
+                  required></textarea>
+              </div>
+
+              @if (actualFile().length > 0) {
+                <div class="mb-4">
+                  <label class="form-label fw-bold text-muted">Imágenes actuales de la petición</label>
+                  <div class="row g-3">
+                    @for (file of actualFile(); track file.id) {
+                      <div class="col-md-4 col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                          <img [src]="'http://localhost:8000/storage/' + file.file_path" class="card-img-top" alt="Imagen petición" style="height: 150px; object-fit: cover;">
+                          <div class="card-footer bg-white border-0 text-center">
+                            <div class="form-check form-switch d-inline-block text-start">
+                              <input 
+                                class="form-check-input" 
+                                type="checkbox" 
+                                role="switch" 
+                                [id]="'deleteCheck' + file.id"
+                                (change)="marcarParaBorrar(file.id, $event)">
+                              <label class="form-check-label text-danger fw-bold small" [for]="'deleteCheck' + file.id">
+                                Marcar para eliminar
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="mb-4 p-3 bg-light border rounded">
+                <label class="form-label fw-bold text-dark"><i class="bi bi-upload me-2"></i>Añadir nuevas imágenes</label>
+                <input 
+                  type="file" 
+                  class="form-control mb-2" 
+                  (change)="onFileSelected($event)" 
+                  accept="image/*"
+                  multiple> <div class="form-text text-muted">
+                  * Puedes seleccionar varias imágenes a la vez. Las imágenes marcadas arriba se borrarán.
+                </div>
+              </div>
+
+              <div class="mb-5">
+                <label class="form-label fw-bold text-muted">Categoría</label>
+                <select class="form-select" name="category_id" [(ngModel)]="formData.category_id">
+                  <option value="" disabled>Selecciona una categoría...</option>
+                  @for (cat of petitionService.allCategories(); track cat.id) {
+                    <option [value]="cat.id">{{ cat.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-4">
+                <a routerLink="/admin" class="btn btn-light border px-4 me-md-2">Cancelar</a>
+                <button type="submit" class="btn btn-warning px-5 fw-bold shadow-sm">
+                  <i class="bi bi-save me-2"></i> Guardar Cambios
+                </button>
+              </div>
+
+            </form> }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

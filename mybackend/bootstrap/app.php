@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\IsAdmin;
 use Cassandra\Exception\AuthenticationException;
 use http\Client\Request;
 use Illuminate\Foundation\Application;
@@ -13,8 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        // portero
+        $middleware->alias([
+            'is_admin' => IsAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Puede no venir el código de a continuación
